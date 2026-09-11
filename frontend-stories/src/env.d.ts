@@ -4,6 +4,8 @@ interface ImportMetaEnv {
   readonly VITE_APPWRITE_BLOG_DATABASE_ID: string;
   readonly VITE_APPWRITE_POSTS_TABLE_ID: string;
   readonly VITE_APPWRITE_BLOG_BUCKET_ID: string;
+  readonly VITE_APPWRITE_EMAIL_VERIFICATION_URL: string;
+  readonly VITE_APPWRITE_PASSWORD_RESET_URL: string;
 }
 
 interface ImportMeta {
