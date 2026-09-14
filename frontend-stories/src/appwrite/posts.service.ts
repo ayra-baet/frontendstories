@@ -102,6 +102,34 @@ class PostsService {
 
     return result.rows[0] ?? null;
   }
+
+  async getPublishedPosts(queries: string[] = []) {
+    return this.tablesDB.listRows({
+      databaseId: config.blogDatabaseId,
+      tableId: config.postsTableId,
+      queries: [Query.equal("status", "published"), ...queries],
+    });
+  }
+
+  async getAllPosts(queries: string[] = []) {
+    return this.tablesDB.listRows({
+      databaseId: config.blogDatabaseId,
+      tableId: config.postsTableId,
+      queries,
+    });
+  }
+
+  async deletePost(id: string) {
+    if (!id) {
+      throw new Error("Post ID is required.");
+    }
+
+    return this.tablesDB.deleteRow({
+      databaseId: config.blogDatabaseId,
+      tableId: config.postsTableId,
+      rowId: id,
+    });
+  }
 }
 
 const postsService = new PostsService();
