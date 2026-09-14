@@ -2,13 +2,15 @@ import { Client, ID, Query, TablesDB } from "appwrite";
 
 import config from "./config";
 
+type PostStatus = "draft" | "published" | "archived";
+
 interface CreatePostData {
   title: string;
   slug: string;
   excerpt?: string;
   content: string;
   coverImageId?: string;
-  status: "draft" | "published" | "archived";
+  status: PostStatus;
   authorId: string;
   tags?: string[];
   publishedAt?: string | null;
