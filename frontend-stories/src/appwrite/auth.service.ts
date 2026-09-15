@@ -24,9 +24,9 @@ class AuthService {
 
   async createAccount({ email, password, name }: CreateAccountData) {
     const normalizedEmail = email.trim().toLowerCase();
-    const normalizeName = name.trim();
+    const normalizedName = name.trim();
 
-    if (!normalizedEmail || !password || !normalizeName) {
+    if (!normalizedEmail || !password || !normalizedName) {
       throw new Error("Email, password, and name are required.");
     }
 
@@ -34,7 +34,7 @@ class AuthService {
       userId: ID.unique(),
       email: normalizedEmail,
       password,
-      name: normalizeName,
+      name: normalizedName,
     });
 
     return this.login({
