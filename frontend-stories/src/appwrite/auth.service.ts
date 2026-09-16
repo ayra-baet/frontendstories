@@ -66,6 +66,50 @@ class AuthService {
     });
   }
 
+  async updateName(name: string) {
+    const normalizedName = name.trim();
+
+    if (!normalizedName) {
+      throw new Error("Name cannot be empty.");
+    }
+
+    return this.account.updateName({
+      name: normalizedName
+    });
+  }
+
+  async updateEmail(email: string, password: string) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      throw new Error("Email cannot be empty.");
+    }
+
+    if (!password) {
+      throw new Error("Password is required.");
+    }
+
+    return this.account.updateEmail({
+      email: normalizedEmail,
+      password
+    });
+  }
+
+  async updatePassword(password: string, oldPassword: string) {
+    if (!password) {
+      throw new Error("New password cannot be empty.");
+    }
+
+    if (!oldPassword) {
+      throw new Error("Current password is required.");
+    }
+
+    return this.account.updatePassword({
+      password,
+      oldPassword
+    });
+  }
+
   async sendVerificationEmail() {
     return this.account.createEmailVerification({
       url: config.emailVerificationUrl,
