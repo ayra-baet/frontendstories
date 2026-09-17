@@ -1,6 +1,7 @@
-import { Client, ID, Query, TablesDB } from "appwrite";
+import { Client, TablesDB, Permission, Role, ID, Query } from "appwrite";
 
 import config from "./config";
+import authService from "./auth.service";
 
 type PostStatus = "draft" | "published" | "archived";
 
@@ -11,7 +12,6 @@ interface CreatePostData {
   content: string;
   coverImageId?: string;
   status: PostStatus;
-  authorId: string;
   tags?: string[];
   publishedAt?: string | null;
 }
@@ -21,56 +21,51 @@ class PostsService {
 
   constructor() {
     const client = new Client()
-      .setEndpoint(config.endpoint)
-      .setProject(config.projectId);
+      .setEndpoint(config.blogDatabaseId)
+      .setProject(config.postsTableId);
 
     this.tablesDB = new TablesDB(client);
   }
 
-  private normalizedTags(tags?: string[]) {
-    const normalizedTags = [
+  private normalizeSlug(slug: string) {
+    const normalizedSlug = slug.trim().toLowerCase();
+
+    if (!normalizedSlug) {
+      throw new Error("Post slug is required.");
+    }
+
+    return normalizedSlug;
+  }
+
+  private normalizeTags(tags?: string[]) {
+    const normlizedTags = [
       ...new Set(
         (tags ?? []).map((tag) => tag.trim().toLowerCase()).filter(Boolean),
       ),
     ];
 
-    if (normalizedTags.length > 5) {
+    if (normlizedTags.length > 5) {
       throw new Error("A post can have at most 5 tags.");
     }
 
-    return normalizedTags;
+    return normlizedTags;
   }
 
-  async createPost(post: CreatePostData) {
-    const title = post.title.trim();
-    const slug = post.title.trim().toLowerCase();
-    const content = post.content.trim();
-    const tags = this.normalizedTags(post.tags);
+    private getPostPermissions(userId: string, status: PostStatus) {
+    const permissions = [
+      Permission.update(Role.user(userId)),
+      Permission.delete(Role.user(userId)),
+    ];
 
-    if (!title || !slug || !content) {
-      throw new Error("Title, slug, and content are required.");
+    if (status === "published") {
+      permissions.push(Permission.read(Role.any()));
+    } else {
+      permissions.push(Permission.read(Role.user(userId)));
     }
 
-    const publishedAt =
-      post.status === "published"
-        ? (post.publishedAt ?? new Date().toISOString())
-        : null;
-
-    return this.tablesDB.createRow({
-      databaseId: config.blogDatabaseId,
-      tableId: config.postsTableId,
-      rowId: ID.unique(),
-      data: {
-        ...post,
-        title,
-        slug,
-        content,
-        tags,
-        publishedAt,
-      },
-    });
+    return permissions;
   }
-
+  
   async getPostById(id: string) {
     if (!id) {
       throw new Error("Post ID is required.");
@@ -84,11 +79,7 @@ class PostsService {
   }
 
   async getPostBySlug(slug: string) {
-    const normalizedSlug = slug.trim().toLowerCase();
-
-    if (!normalizedSlug) {
-      throw new Error("Post slug is required.");
-    }
+    const normalizedSlug = this.normalizeSlug(slug);
 
     const result = await this.tablesDB.listRows({
       databaseId: config.blogDatabaseId,
@@ -107,15 +98,25 @@ class PostsService {
     return this.tablesDB.listRows({
       databaseId: config.blogDatabaseId,
       tableId: config.postsTableId,
-      queries: [Query.equal("status", "published"), ...queries],
+      queries: [
+        Query.equal("status", "published"),
+        Query.orderDesc("publishedAt"),
+        ...queries,
+      ],
     });
   }
 
-  async getAllPosts(queries: string[] = []) {
+  async getMyPosts(queries: string[] = []) {
+    const currentUser = await authService.getCurrentUser();
+
     return this.tablesDB.listRows({
       databaseId: config.blogDatabaseId,
       tableId: config.postsTableId,
-      queries,
+      queries: [
+        Query.equal("authorId", currentUser.$id),
+        Query.orderDesc("$createdAt"),
+        ...queries,
+      ],
     });
   }
 
