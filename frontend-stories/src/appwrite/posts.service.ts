@@ -21,8 +21,8 @@ class PostsService {
 
   constructor() {
     const client = new Client()
-      .setEndpoint(config.blogDatabaseId)
-      .setProject(config.postsTableId);
+      .setEndpoint(config.endpoint)
+      .setProject(config.projectId);
 
     this.tablesDB = new TablesDB(client);
   }
@@ -38,17 +38,17 @@ class PostsService {
   }
 
   private normalizeTags(tags?: string[]) {
-    const normlizedTags = [
+    const normalizedTags = [
       ...new Set(
         (tags ?? []).map((tag) => tag.trim().toLowerCase()).filter(Boolean),
       ),
     ];
 
-    if (normlizedTags.length > 5) {
+    if (normalizedTags.length > 5) {
       throw new Error("A post can have at most 5 tags.");
     }
 
-    return normlizedTags;
+    return normalizedTags;
   }
 
     private getPostPermissions(userId: string, status: PostStatus) {
