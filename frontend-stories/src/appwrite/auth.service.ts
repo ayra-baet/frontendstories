@@ -1,6 +1,6 @@
-import { Client, Account, ID } from "appwrite";
-
-import config from "./config";
+import { Account, ID } from "appwrite";
+import config from "../config/config";
+import client from "./client";
 
 interface LoginCredentials {
   email: string;
@@ -15,10 +15,6 @@ class AuthService {
   private account: Account;
 
   constructor() {
-    const client = new Client()
-      .setEndpoint(config.endpoint)
-      .setProject(config.projectId);
-
     this.account = new Account(client);
   }
 
@@ -74,7 +70,7 @@ class AuthService {
     }
 
     return this.account.updateName({
-      name: normalizedName
+      name: normalizedName,
     });
   }
 
@@ -91,7 +87,7 @@ class AuthService {
 
     return this.account.updateEmail({
       email: normalizedEmail,
-      password
+      password,
     });
   }
 
@@ -106,7 +102,7 @@ class AuthService {
 
     return this.account.updatePassword({
       password,
-      oldPassword
+      oldPassword,
     });
   }
 
