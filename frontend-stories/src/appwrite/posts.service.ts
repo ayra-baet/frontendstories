@@ -1,12 +1,28 @@
-import { TablesDB, Permission, Role, ID, Query } from "appwrite";
+import { TablesDB, Permission, Role, ID, Query, type Models } from "appwrite";
+
 import config from "../config/config";
+
 import type {
   CreatePostData,
+  Post,
   PostStatus,
   UpdatePostData,
 } from "../models/post";
+
 import client from "./client";
 import authService from "./auth.service";
+
+interface AppwritePostRow extends Models.Row {
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  content: string;
+  coverImageId: string | null;
+  status: PostStatus;
+  tags: string[];
+  publishedAt: string | null;
+  authorId: string;
+}
 
 class PostsService {
   private tablesDB: TablesDB;
@@ -15,7 +31,7 @@ class PostsService {
     this.tablesDB = new TablesDB(client);
   }
 
-  private normalizeSlug(slug: string) {
+  private normalizeSlug(slug: string): string {
     const normalizedSlug = slug.trim().toLowerCase();
 
     if (!normalizedSlug) {
@@ -25,7 +41,7 @@ class PostsService {
     return normalizedSlug;
   }
 
-  private normalizeTags(tags?: string[]) {
+  private normalizeTags(tags?: string[]): string[] {
     const normalizedTags = [
       ...new Set(
         (tags ?? []).map((tag) => tag.trim().toLowerCase()).filter(Boolean),
@@ -39,8 +55,8 @@ class PostsService {
     return normalizedTags;
   }
 
-  private getPostPermissions(userId: string, status: PostStatus) {
-    const permissions = [
+  private getPostPermissions(userId: string, status: PostStatus): string[] {
+    const permissions: string[] = [
       Permission.update(Role.user(userId)),
       Permission.delete(Role.user(userId)),
     ];
@@ -54,7 +70,24 @@ class PostsService {
     return permissions;
   }
 
-  async createPost(post: CreatePostData) {
+  private mapPost(row: AppwritePostRow): Post {
+    return {
+      id: row.$id,
+      createdAt: row.$createdAt,
+      updatedAt: row.$updatedAt,
+      title: row.title,
+      slug: row.slug,
+      excerpt: row.excerpt,
+      content: row.content,
+      coverImageId: row.coverImageId,
+      status: row.status,
+      tags: row.tags,
+      publishedAt: row.publishedAt,
+      authorId: row.authorId,
+    };
+  }
+
+  async createPost(post: CreatePostData): Promise<Post> {
     const title = post.title.trim();
     const slug = this.normalizeSlug(post.slug);
     const content = post.content.trim();
@@ -73,7 +106,7 @@ class PostsService {
 
     const permissions = this.getPostPermissions(currentUser.$id, post.status);
 
-    return this.tablesDB.createRow({
+    const row = await this.tablesDB.createRow<AppwritePostRow>({
       databaseId: config.blogDatabaseId,
       tableId: config.postsTableId,
       rowId: ID.unique(),
@@ -90,24 +123,28 @@ class PostsService {
       },
       permissions,
     });
+
+    return this.mapPost(row);
   }
 
-  async getPostById(id: string) {
+  async getPostById(id: string): Promise<Post> {
     if (!id) {
       throw new Error("Post ID is required.");
     }
 
-    return this.tablesDB.getRow({
+    const row = await this.tablesDB.getRow<AppwritePostRow>({
       databaseId: config.blogDatabaseId,
       tableId: config.postsTableId,
       rowId: id,
     });
+
+    return this.mapPost(row);
   }
 
-  async getPostBySlug(slug: string) {
+  async getPostBySlug(slug: string): Promise<Post | null> {
     const normalizedSlug = this.normalizeSlug(slug);
 
-    const result = await this.tablesDB.listRows({
+    const result = await this.tablesDB.listRows<AppwritePostRow>({
       databaseId: config.blogDatabaseId,
       tableId: config.postsTableId,
       queries: [
@@ -117,11 +154,13 @@ class PostsService {
       ],
     });
 
-    return result.rows[0] ?? null;
+    const row = result.rows[0];
+
+    return row ? this.mapPost(row) : null;
   }
 
-  async getPublishedPosts(queries: string[] = []) {
-    return this.tablesDB.listRows({
+  async getPublishedPosts(queries: string[] = []): Promise<Post[]> {
+    const result = await this.tablesDB.listRows<AppwritePostRow>({
       databaseId: config.blogDatabaseId,
       tableId: config.postsTableId,
       queries: [
@@ -130,12 +169,14 @@ class PostsService {
         ...queries,
       ],
     });
+
+    return result.rows.map((row) => this.mapPost(row));
   }
 
-  async getMyPosts(queries: string[] = []) {
+  async getMyPosts(queries: string[] = []): Promise<Post[]> {
     const currentUser = await authService.getCurrentUser();
 
-    return this.tablesDB.listRows({
+    const result = await this.tablesDB.listRows<AppwritePostRow>({
       databaseId: config.blogDatabaseId,
       tableId: config.postsTableId,
       queries: [
@@ -144,16 +185,18 @@ class PostsService {
         ...queries,
       ],
     });
+
+    return result.rows.map((row) => this.mapPost(row));
   }
 
-  async updatePost(id: string, updates: UpdatePostData) {
+  async updatePost(id: string, updates: UpdatePostData): Promise<Post> {
     if (!id) {
       throw new Error("Post ID is required.");
     }
 
     const currentUser = await authService.getCurrentUser();
 
-    const existingPost = await this.tablesDB.getRow({
+    const existingPost = await this.tablesDB.getRow<AppwritePostRow>({
       databaseId: config.blogDatabaseId,
       tableId: config.postsTableId,
       rowId: id,
@@ -216,23 +259,25 @@ class PostsService {
 
     const permissions = this.getPostPermissions(currentUser.$id, nextStatus);
 
-    return this.tablesDB.updateRow({
+    const row = await this.tablesDB.updateRow<AppwritePostRow>({
       databaseId: config.blogDatabaseId,
       tableId: config.postsTableId,
       rowId: id,
       data: normalizedUpdates,
       permissions,
     });
+
+    return this.mapPost(row);
   }
 
-  async deletePost(id: string) {
+  async deletePost(id: string): Promise<void> {
     if (!id) {
       throw new Error("Post ID is required.");
     }
 
     const currentUser = await authService.getCurrentUser();
 
-    const existingPost = await this.tablesDB.getRow({
+    const existingPost = await this.tablesDB.getRow<AppwritePostRow>({
       databaseId: config.blogDatabaseId,
       tableId: config.postsTableId,
       rowId: id,
@@ -242,7 +287,7 @@ class PostsService {
       throw new Error("You are not allowed to delete the post.");
     }
 
-    return this.tablesDB.deleteRow({
+    await this.tablesDB.deleteRow({
       databaseId: config.blogDatabaseId,
       tableId: config.postsTableId,
       rowId: id,
