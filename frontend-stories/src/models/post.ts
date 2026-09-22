@@ -1,9 +1,9 @@
 export type PostStatus = "draft" | "published" | "archived";
 
 export interface Post {
-    $id: string;
-    $createdAt: string;
-    $updatedAt: string;
+    id: string;
+    createdAt: string;
+    updatedAt: string;
 
     title: string;
     slug: string;
