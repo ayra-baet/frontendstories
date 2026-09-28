@@ -114,7 +114,7 @@ class PostsService {
       data: {
         title,
         slug,
-        excerpt: post.excerpt?.trim() ?? null,
+        excerpt: post.excerpt?.trim() || null,
         content,
         coverImageId: post.coverImageId ?? null,
         status: post.status,
@@ -238,7 +238,7 @@ class PostsService {
     }
 
     if (updates.coverImageId !== undefined) {
-      normalizedUpdates.coverImageId = updates.coverImageId || null;
+      normalizedUpdates.coverImageId = updates.coverImageId ?? null;
     }
 
     if (updates.tags !== undefined) {
