@@ -11,6 +11,7 @@ import type {
 
 import client from "./client";
 import authService from "./auth.service";
+import storageService from "./storage.service";
 
 interface AppwritePostRow extends Models.Row {
   title: string;
@@ -267,6 +268,21 @@ class PostsService {
       permissions,
     });
 
+    if (
+      updates.coverImageId !== undefined &&
+      existingPost.coverImageId !== null &&
+      existingPost.coverImageId !== normalizedUpdates.coverImageId
+    ) {
+      try {
+        await storageService.deleteImage(existingPost.coverImageId);
+      } catch (error) {
+        console.error(
+          "PostsService :: updatePost :: failed to delete cover image",
+          error,
+        );
+      }
+    }
+
     return this.mapPost(row);
   }
 
@@ -292,6 +308,17 @@ class PostsService {
       tableId: config.postsTableId,
       rowId: id,
     });
+
+    if (existingPost.coverImageId) {
+      try {
+        await storageService.deleteImage(existingPost.coverImageId);
+      } catch (error) {
+        console.error(
+          "PostsService :: deletePost :: failed to delete cover image",
+          error,
+        );
+      }
+    }
   }
 }
 
