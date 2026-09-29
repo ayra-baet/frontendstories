@@ -1,6 +1,7 @@
-import { ID, Storage, type Models } from "appwrite";
+import { ID, Permission, Role, Storage, type Models } from "appwrite";
 import client from "./client";
 import config from "../config/config";
+import type { PostStatus } from "../models/post";
 
 class StorageService {
   private storage: Storage;
@@ -9,16 +10,54 @@ class StorageService {
     this.storage = new Storage(client);
   }
 
-  async uploadImage(image: File, permissions?: string[]): Promise<Models.File> {
-    if (!image) {
+  private getImagePermissions(userId: string, status: PostStatus): string[] {
+    return [
+      status === "published"
+        ? Permission.read(Role.any())
+        : Permission.read(Role.user(userId)),
+      Permission.update(Role.user(userId)),
+      Permission.delete(Role.user(userId)),
+    ];
+  }
+
+  async uploadImage(
+    image: File,
+    userId: string,
+    status: PostStatus,
+  ): Promise<Models.File> {
+    if (!(image instanceof File)) {
       throw new Error("Image is required.");
+    }
+
+    if (!userId) {
+      throw new Error("User ID is required.");
     }
 
     return this.storage.createFile({
       bucketId: config.blogBucketId,
       fileId: ID.unique(),
       file: image,
-      permissions,
+      permissions: this.getImagePermissions(userId, status),
+    });
+  }
+
+  async updateImagePermissions(
+    fileId: string,
+    userId: string,
+    status: PostStatus,
+  ): Promise<Models.File> {
+    if (!fileId) {
+      throw new Error("File ID is required.");
+    }
+
+    if (!userId) {
+      throw new Error("User ID is required.");
+    }
+
+    return this.storage.updateFile({
+      bucketId: config.blogBucketId,
+      fileId,
+      permissions: this.getImagePermissions(userId, status),
     });
   }
 
