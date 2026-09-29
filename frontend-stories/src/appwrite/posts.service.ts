@@ -246,6 +246,7 @@ class PostsService {
     }
 
     const nextStatus = updates.status ?? existingPost.status;
+    const statusChanged = nextStatus !== existingPost.status;
 
     normalizedUpdates.status = nextStatus;
 
@@ -267,6 +268,21 @@ class PostsService {
       data: normalizedUpdates,
       permissions,
     });
+
+    if (statusChanged && existingPost.coverImageId) {
+      try {
+        await storageService.updateImagePermissions(
+          existingPost.coverImageId,
+          currentUser.$id,
+          nextStatus,
+        );
+      } catch (error) {
+        console.error(
+          "PostsService :: updatePost :: failed to update the cover image's permissions",
+          error,
+        );
+      }
+    }
 
     if (
       updates.coverImageId !== undefined &&
