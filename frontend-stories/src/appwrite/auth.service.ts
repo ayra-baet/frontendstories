@@ -15,13 +15,16 @@ class AuthService {
   private account: Account;
 
   constructor() {
+    // Encapsulate Appwrite auth logic so components only call service methods.
     this.account = new Account(client);
   }
 
   async createAccount({ email, password, name }: CreateAccountData) {
+    // Normalize input for consistency and to avoid whitespace issues.
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedName = name.trim();
 
+    // Basic validation before API call (not a substitute for backend checks).
     if (!normalizedEmail || !password || !normalizedName) {
       throw new Error("Email, password, and name are required.");
     }
@@ -33,6 +36,7 @@ class AuthService {
       name: normalizedName,
     });
 
+    // Auto-login after registration for smoother UX.
     return this.login({
       email: normalizedEmail,
       password,
@@ -46,6 +50,7 @@ class AuthService {
       throw new Error("Email and password are required.");
     }
 
+    // Allow Appwrite errors to propagate; no added recovery logic here.
     return this.account.createEmailPasswordSession({
       email: normalizedEmail,
       password,
@@ -53,10 +58,12 @@ class AuthService {
   }
 
   async getCurrentUser() {
+    // Keep components independent of Appwrite's Account API.
     return this.account.get();
   }
 
   async logout() {
+    // "current" deletes the session of the authenticated user.
     return this.account.deleteSession({
       sessionId: "current",
     });
@@ -65,6 +72,7 @@ class AuthService {
   async updateName(name: string) {
     const normalizedName = name.trim();
 
+    // Ensure name is non-empty before update.
     if (!normalizedName) {
       throw new Error("Name cannot be empty.");
     }
@@ -81,6 +89,7 @@ class AuthService {
       throw new Error("Email cannot be empty.");
     }
 
+    // The password is required to confirm email change.
     if (!password) {
       throw new Error("Password is required.");
     }
@@ -100,6 +109,7 @@ class AuthService {
       throw new Error("Current password is required.");
     }
 
+    // Appwrite verifies the current password and whether the change is allowed.
     return this.account.updatePassword({
       password,
       oldPassword,
@@ -107,12 +117,14 @@ class AuthService {
   }
 
   async sendVerificationEmail() {
+    // Keep the application-specific verification URL in config.
     return this.account.createEmailVerification({
       url: config.emailVerificationUrl,
     });
   }
 
   async verifyEmail(userId: string, secret: string) {
+    // Require userId and secret from verification flow.
     if (!userId || !secret) {
       throw new Error("User ID and verification secret are required.");
     }
@@ -130,6 +142,7 @@ class AuthService {
       throw new Error("Email is required.");
     }
 
+    // Recovery URL comes from config, not hard-coded.
     return this.account.createRecovery({
       email: normalizedEmail,
       url: config.passwordResetUrl,
@@ -149,6 +162,7 @@ class AuthService {
   }
 }
 
+// Export shared instance for consistent use across UI.
 const authService = new AuthService();
 
 export default authService;
