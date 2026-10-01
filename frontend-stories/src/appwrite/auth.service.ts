@@ -15,16 +15,16 @@ class AuthService {
   private account: Account;
 
   constructor() {
-    // Encapsulate Appwrite auth logic so components only call service methods.
+    // Keep Appwrite auth logic inside the service boundary.
     this.account = new Account(client);
   }
 
   async createAccount({ email, password, name }: CreateAccountData) {
-    // Normalize input for consistency and to avoid whitespace issues.
+    // Normalize input before sending it to Appwrite.
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedName = name.trim();
 
-    // Basic validation before API call (not a substitute for backend checks).
+    // Basic validation before the external API call.
     if (!normalizedEmail || !password || !normalizedName) {
       throw new Error("Email, password, and name are required.");
     }
@@ -50,7 +50,7 @@ class AuthService {
       throw new Error("Email and password are required.");
     }
 
-    // Allow Appwrite errors to propagate; no added recovery logic here.
+    // Let Appwrite errors propagate; this service does not transform them.
     return this.account.createEmailPasswordSession({
       email: normalizedEmail,
       password,
@@ -89,7 +89,7 @@ class AuthService {
       throw new Error("Email cannot be empty.");
     }
 
-    // The password is required to confirm email change.
+    // The current password is required to confirm the email change.
     if (!password) {
       throw new Error("Password is required.");
     }
@@ -117,14 +117,14 @@ class AuthService {
   }
 
   async sendVerificationEmail() {
-    // Keep the application-specific verification URL in config.
+    // Keep the verification URL in config rather than hard-coding it here.
     return this.account.createEmailVerification({
       url: config.emailVerificationUrl,
     });
   }
 
   async verifyEmail(userId: string, secret: string) {
-    // Require userId and secret from verification flow.
+    // Require the userId and secret from the verification flow.
     if (!userId || !secret) {
       throw new Error("User ID and verification secret are required.");
     }
@@ -142,7 +142,7 @@ class AuthService {
       throw new Error("Email is required.");
     }
 
-    // Recovery URL comes from config, not hard-coded.
+    // Keep the recovery URL in config rather than hard-coding it here.
     return this.account.createRecovery({
       email: normalizedEmail,
       url: config.passwordResetUrl,
@@ -162,7 +162,7 @@ class AuthService {
   }
 }
 
-// Export shared instance for consistent use across UI.
+// Export one shared instance for consistent use across the UI.
 const authService = new AuthService();
 
 export default authService;
