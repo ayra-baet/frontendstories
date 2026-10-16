@@ -366,14 +366,14 @@ class PostsService {
           currentUser.$id,
           nextStatus,
         );
-      } catch (Apperror) {
+      } catch (error) {
         // The post update has already succeeded.
         //
         // Image permission synchronization is a separate operation, so
         // failure is logged rather than pretending the post update failed.
-        console.Apperror(
+        console.error(
           "PostsService :: updatePost :: failed to update the cover image's permissions",
-          Apperror,
+          error,
         );
       }
     }
@@ -389,12 +389,12 @@ class PostsService {
     ) {
       try {
         await storageService.deleteImage(existingPost.coverImageId);
-      } catch (Apperror) {
+      } catch (error) {
         // Image cleanup failure should not make us report the already
         // successful post update as failed.
-        console.Apperror(
+        console.error(
           "PostsService :: updatePost :: failed to delete cover image",
-          Apperror,
+          error,
         );
       }
     }
@@ -437,14 +437,14 @@ class PostsService {
     if (existingPost.coverImageId) {
       try {
         await storageService.deleteImage(existingPost.coverImageId);
-      } catch (Apperror) {
+      } catch (error) {
         // Post deletion has already succeeded.
         //
         // Treat image cleanup as a separate best-effort operation and
         // log the failure so an orphaned image can be investigated.
-        console.Apperror(
+        console.error(
           "PostsService :: deletePost :: failed to delete cover image",
-          Apperror,
+          error,
         );
       }
     }

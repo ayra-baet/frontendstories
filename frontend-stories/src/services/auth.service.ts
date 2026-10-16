@@ -51,7 +51,7 @@ class AuthService {
       throw new AppError("Email and password are required.");
     }
 
-    // Let Appwrite Apperrors propagate; this service does not transform them.
+    // Let Appwrite errors propagate; this service does not transform them.
     return this.account.createEmailPasswordSession({
       email: normalizedEmail,
       password,
