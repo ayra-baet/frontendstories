@@ -2,6 +2,7 @@ import { ID, Permission, Role, Storage, type Models } from "appwrite";
 import client from "./client";
 import config from "../config/config";
 import type { PostStatus } from "../models/post";
+import AppError from "../utils/AppError";
 
 class StorageService {
   private storage: Storage;
@@ -39,11 +40,11 @@ class StorageService {
     // Validate the file and user ID before upload; this does not verify that
     // the user ID belongs to the authenticated caller.
     if (!(image instanceof File)) {
-      throw new Error("Image is required.");
+      throw new AppError("Image is required.");
     }
 
     if (!userId) {
-      throw new Error("User ID is required.");
+      throw new AppError("User ID is required.");
     }
 
     // Use the post's owner and status to set file permissions before upload.
@@ -61,11 +62,11 @@ class StorageService {
     status: PostStatus,
   ): Promise<Models.File> {
     if (!fileId) {
-      throw new Error("File ID is required.");
+      throw new AppError("File ID is required.");
     }
 
     if (!userId) {
-      throw new Error("User ID is required.");
+      throw new AppError("User ID is required.");
     }
 
     // PostsService determines when the image's visibility needs to change;
@@ -80,7 +81,7 @@ class StorageService {
 
   async deleteImage(fileId: string): Promise<void> {
     if (!fileId) {
-      throw new Error("File ID is required.");
+      throw new AppError("File ID is required.");
     }
 
     await this.storage.deleteFile({
@@ -91,7 +92,7 @@ class StorageService {
 
   getFileView(fileId: string): string {
     if (!fileId) {
-      throw new Error("File ID is required.");
+      throw new AppError("File ID is required.");
     }
 
     return this.storage
@@ -104,7 +105,7 @@ class StorageService {
 
   getFilePreview(fileId: string, width?: number, height?: number): string {
     if (!fileId) {
-      throw new Error("File ID is required.");
+      throw new AppError("File ID is required.");
     }
 
     return this.storage

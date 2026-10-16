@@ -12,6 +12,7 @@ import type {
 import client from "./client";
 import authService from "./auth.service";
 import storageService from "./storage.service";
+import AppError from "../utils/AppError";
 
 interface AppwritePostRow extends Models.Row {
   title: string;
@@ -38,7 +39,7 @@ class PostsService {
 
     // Normalize the slug before persistence so the app stores one consistent value.
     if (!normalizedSlug) {
-      throw new Error("Post slug is required.");
+      throw new AppError("Post slug is required.");
     }
 
     return normalizedSlug;
@@ -54,7 +55,7 @@ class PostsService {
     // Normalize tags to one consistent format before persistence.
     // This service enforces the app's five-tag limit before saving the post.
     if (normalizedTags.length > 5) {
-      throw new Error("A post can have at most 5 tags.");
+      throw new AppError("A post can have at most 5 tags.");
     }
 
     return normalizedTags;
@@ -123,7 +124,7 @@ class PostsService {
     // Perform basic application-level validation before making the
     // external persistence request.
     if (!title || !content) {
-      throw new Error("Title and content are required.");
+      throw new AppError("Title and content are required.");
     }
 
     // The authenticated user is the post author; the client does not choose that value.
@@ -174,7 +175,7 @@ class PostsService {
 
   async getPostById(id: string): Promise<Post> {
     if (!id) {
-      throw new Error("Post ID is required.");
+      throw new AppError("Post ID is required.");
     }
 
     const row = await this.tablesDB.getRow<AppwritePostRow>({
@@ -252,7 +253,7 @@ class PostsService {
 
   async updatePost(id: string, updates: UpdatePostData): Promise<Post> {
     if (!id) {
-      throw new Error("Post ID is required.");
+      throw new AppError("Post ID is required.");
     }
 
     // Authentication tells us who is attempting the operation.
@@ -276,7 +277,7 @@ class PostsService {
     //
     // The user must own the post.
     if (existingPost.authorId !== currentUser.$id) {
-      throw new Error("You are not allowed to update the post.");
+      throw new AppError("You are not allowed to update the post.");
     }
 
     // Normalize and validate supplied fields before sending the update to Appwrite.
@@ -286,7 +287,7 @@ class PostsService {
       const title = updates.title.trim();
 
       if (!title) {
-        throw new Error("Title cannot be empty.");
+        throw new AppError("Title cannot be empty.");
       }
 
       normalizedUpdates.title = title;
@@ -304,7 +305,7 @@ class PostsService {
       const content = updates.content.trim();
 
       if (!content) {
-        throw new Error("Content cannot be empty.");
+        throw new AppError("Content cannot be empty.");
       }
 
       normalizedUpdates.content = content;
@@ -365,14 +366,14 @@ class PostsService {
           currentUser.$id,
           nextStatus,
         );
-      } catch (error) {
+      } catch (Apperror) {
         // The post update has already succeeded.
         //
         // Image permission synchronization is a separate operation, so
         // failure is logged rather than pretending the post update failed.
-        console.error(
+        console.Apperror(
           "PostsService :: updatePost :: failed to update the cover image's permissions",
-          error,
+          Apperror,
         );
       }
     }
@@ -388,12 +389,12 @@ class PostsService {
     ) {
       try {
         await storageService.deleteImage(existingPost.coverImageId);
-      } catch (error) {
+      } catch (Apperror) {
         // Image cleanup failure should not make us report the already
         // successful post update as failed.
-        console.error(
+        console.Apperror(
           "PostsService :: updatePost :: failed to delete cover image",
-          error,
+          Apperror,
         );
       }
     }
@@ -403,7 +404,7 @@ class PostsService {
 
   async deletePost(id: string): Promise<void> {
     if (!id) {
-      throw new Error("Post ID is required.");
+      throw new AppError("Post ID is required.");
     }
 
     const currentUser = await authService.getCurrentUser();
@@ -421,7 +422,7 @@ class PostsService {
     //
     // Only the post owner is allowed to perform this operation.
     if (existingPost.authorId !== currentUser.$id) {
-      throw new Error("You are not allowed to delete the post.");
+      throw new AppError("You are not allowed to delete the post.");
     }
 
     // Delete the post from the database first.
@@ -436,14 +437,14 @@ class PostsService {
     if (existingPost.coverImageId) {
       try {
         await storageService.deleteImage(existingPost.coverImageId);
-      } catch (error) {
+      } catch (Apperror) {
         // Post deletion has already succeeded.
         //
         // Treat image cleanup as a separate best-effort operation and
         // log the failure so an orphaned image can be investigated.
-        console.error(
+        console.Apperror(
           "PostsService :: deletePost :: failed to delete cover image",
-          error,
+          Apperror,
         );
       }
     }

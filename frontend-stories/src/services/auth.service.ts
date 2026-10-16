@@ -1,6 +1,7 @@
 import { Account, ID } from "appwrite";
 import config from "../config/config";
 import client from "./client";
+import AppError from "../utils/AppError";
 
 interface LoginCredentials {
   email: string;
@@ -26,7 +27,7 @@ class AuthService {
 
     // Basic validation before the external API call.
     if (!normalizedEmail || !password || !normalizedName) {
-      throw new Error("Email, password, and name are required.");
+      throw new AppError("Email, password, and name are required.");
     }
 
     await this.account.create({
@@ -47,10 +48,10 @@ class AuthService {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (!normalizedEmail || !password) {
-      throw new Error("Email and password are required.");
+      throw new AppError("Email and password are required.");
     }
 
-    // Let Appwrite errors propagate; this service does not transform them.
+    // Let Appwrite Apperrors propagate; this service does not transform them.
     return this.account.createEmailPasswordSession({
       email: normalizedEmail,
       password,
@@ -74,7 +75,7 @@ class AuthService {
 
     // Ensure name is non-empty before update.
     if (!normalizedName) {
-      throw new Error("Name cannot be empty.");
+      throw new AppError("Name cannot be empty.");
     }
 
     return this.account.updateName({
@@ -86,12 +87,12 @@ class AuthService {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (!normalizedEmail) {
-      throw new Error("Email cannot be empty.");
+      throw new AppError("Email cannot be empty.");
     }
 
     // The current password is required to confirm the email change.
     if (!password) {
-      throw new Error("Password is required.");
+      throw new AppError("Password is required.");
     }
 
     return this.account.updateEmail({
@@ -102,11 +103,11 @@ class AuthService {
 
   async updatePassword(password: string, oldPassword: string) {
     if (!password) {
-      throw new Error("New password cannot be empty.");
+      throw new AppError("New password cannot be empty.");
     }
 
     if (!oldPassword) {
-      throw new Error("Current password is required.");
+      throw new AppError("Current password is required.");
     }
 
     // Appwrite verifies the current password and whether the change is allowed.
@@ -126,7 +127,7 @@ class AuthService {
   async verifyEmail(userId: string, secret: string) {
     // Require the userId and secret from the verification flow.
     if (!userId || !secret) {
-      throw new Error("User ID and verification secret are required.");
+      throw new AppError("User ID and verification secret are required.");
     }
 
     return this.account.updateEmailVerification({
@@ -139,7 +140,7 @@ class AuthService {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (!normalizedEmail) {
-      throw new Error("Email is required.");
+      throw new AppError("Email is required.");
     }
 
     // Keep the recovery URL in config rather than hard-coding it here.
@@ -151,7 +152,7 @@ class AuthService {
 
   async resetPassword(userId: string, secret: string, password: string) {
     if (!userId || !secret || !password) {
-      throw new Error("User ID, secret, and password are required.");
+      throw new AppError("User ID, secret, and password are required.");
     }
 
     return this.account.updateRecovery({

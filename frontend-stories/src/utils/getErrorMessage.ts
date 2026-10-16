@@ -1,10 +1,15 @@
 import { AppwriteException } from "appwrite";
+import AppError from "./AppError";
 
 const FALLBACK_MESSAGE = "Something went wrong. Please try again";
 
 function getErrorMessage(error: unknown): string {
-  // Handle Appwrite errors first so I can map known
-  // error codes to user-friendly message.
+  // Only our explicitly user-facing application errors
+  // may return their own messages.
+  if (error instanceof AppError) {
+    return error.message;
+  }
+
   if (error instanceof AppwriteException) {
     // Prefer specific error types over broad HTTP codes.
     switch (error.type) {
@@ -58,19 +63,14 @@ function getErrorMessage(error: unknown): string {
         return "Too many requests. Please wait a moment and try again.";
     }
 
-    if (error.code >= 500) {
+    if (error.code >= 500 && error.code <= 599) {
       return "Something went wrong on our end. Please try again later.";
     }
 
     return FALLBACK_MESSAGE;
   }
 
-  // Preserve messages from regular Error instances.
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  // Handles thrown values that aren't Error instances.
+  // Handles unexpected Errors, strings, null, and other values.
   return FALLBACK_MESSAGE;
 }
 
