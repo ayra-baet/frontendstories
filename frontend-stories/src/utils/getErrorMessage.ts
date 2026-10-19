@@ -1,7 +1,7 @@
 import { AppwriteException } from "appwrite";
 import AppError from "./AppError";
 
-const FALLBACK_MESSAGE = "Something went wrong. Please try again";
+const FALLBACK_MESSAGE = "Something went wrong. Please try again.";
 
 function getErrorMessage(error: unknown): string {
   // Only our explicitly user-facing application errors
@@ -29,16 +29,16 @@ function getErrorMessage(error: unknown): string {
         return "Too many attempts. Please wait a moment before trying again.";
 
       case "storage_file_type_unsupported":
-        return "The file type isn't supported. Please choose an allowed image format.";
+        return "The file type isn't supported. Please choose an allowed image format like JPEG, PNG, or WebP.";
 
       case "storage_invalid_file_size":
-        return "The image is too large or has an invalid file size. Please choose another image.";
+        return "The image file is too large. Try compressing it or choosing a smaller image.";
 
       case "row_already_exists":
-        return "The data already exists. Please choose a different value.";
+        return "This entry or title already exists. Please choose a unique name.";
 
       case "row_invalid_structure":
-        return "The data couldn't be saved. Please try again.";
+        return "Your content couldn't be saved. Please check for missing required fields and try again.";
     }
 
     // Use HTTP codes only when a more spefic type
@@ -51,13 +51,13 @@ function getErrorMessage(error: unknown): string {
         return "You don't have permission to perform this action.";
 
       case 404:
-        return "The requested resource couldn't be found. It may have been removed.";
+        return "The requested resource couldn't be found. It may have been deleted or moved.";
 
       case 409:
-        return "The action conflicts with existing data. Please refresh and try again.";
+        return "The action conflicts with existing data. Please refresh the page and try again.";
 
       case 413:
-        return "The uploaded file is too large. Please choose a smaller file.";
+        return "The uploaded file exceeds the server size limit. Please choose a compressed or smaller file.";
 
       case 429:
         return "Too many requests. Please wait a moment and try again.";
