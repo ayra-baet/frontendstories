@@ -4,14 +4,13 @@ import AppError from "./AppError";
 const FALLBACK_MESSAGE = "Something went wrong. Please try again.";
 
 function getErrorMessage(error: unknown): string {
-  // Only our explicitly user-facing application errors
-  // may return their own messages.
+  // AppError messages are written for users; other Error messages may expose implementation details.
   if (error instanceof AppError) {
     return error.message;
   }
 
   if (error instanceof AppwriteException) {
-    // Prefer specific error types over broad HTTP codes.
+    // A known Appwrite type is more specific than its HTTP status, so map it first.
     switch (error.type) {
       case "user_invalid_credentials":
         return "The email or password you entered is incorrect. Please try again.";
@@ -41,8 +40,7 @@ function getErrorMessage(error: unknown): string {
         return "Your content couldn't be saved. Please check for missing required fields and try again.";
     }
 
-    // Use HTTP codes only when a more spefic type
-    // hasn't already provided a message.
+    // Fall back to the HTTP status when the error type has no dedicated message.
     switch (error.code) {
       case 401:
         return "Please sign in again to continue.";
@@ -70,7 +68,7 @@ function getErrorMessage(error: unknown): string {
     return FALLBACK_MESSAGE;
   }
 
-  // Handles unexpected Errors, strings, null, and other values.
+  // Keep unknown inputs generic so technical error details are not shown to users.
   return FALLBACK_MESSAGE;
 }
 
