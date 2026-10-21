@@ -1,7 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { AppwriteException } from "appwrite";
+import { describe, expect,it } from "vitest";
+
 import AppError from "./AppError";
 import getErrorMessage from "./getErrorMessage";
-import { AppwriteException } from "appwrite";
 
 const FALLBACK_MESSAGE = "Something went wrong. Please try again.";
 

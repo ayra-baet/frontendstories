@@ -1,4 +1,5 @@
 import { AppwriteException } from "appwrite";
+
 import AppError from "./AppError";
 
 const FALLBACK_MESSAGE = "Something went wrong. Please try again.";

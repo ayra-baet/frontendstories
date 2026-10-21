@@ -1,7 +1,8 @@
 import { Account, ID } from "appwrite";
+
 import config from "../config/config";
-import client from "./client";
 import AppError from "../utils/AppError";
+import client from "./client";
 
 interface LoginCredentials {
   email: string;

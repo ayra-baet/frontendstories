@@ -1,4 +1,5 @@
 import { Client } from "appwrite";
+
 import config from "../config/config";
 
 const client = new Client()
