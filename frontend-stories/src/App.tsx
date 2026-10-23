@@ -1,35 +1,26 @@
-import { useEffect, useState } from 'react';
-import { account } from './appwrite/config';
+import { Route, Routes } from "react-router-dom";
+
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/LoginPage";
+import NotFoundPage from "./pages/NotFoundPage";
+import PostPage from "./pages/PostPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import SignupPage from "./pages/SignupPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 
 function App() {
-  const [status, setStatus] = useState<string>('Connecting to Appwrite...');
-
-  useEffect(() => {
-    // Try to get the current user session (will fail gracefully if not logged in)
-    account.get()
-      .then((user) => {
-        setStatus(`Connected! Hello ${user.name || 'User'}`);
-      })
-      .catch((error) => {
-        // A 401 error is actually a SUCCESSFUL connection! 
-        // It means Appwrite answered, but no user is logged in yet.
-        if (error.code === 401) {
-          setStatus('Connected to Appwrite! (No active session)');
-        } else {
-          setStatus(`Connection failed: ${error.message}`);
-        }
-      });
-  }, []);
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="rounded-lg bg-white p-8 shadow-md">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Appwrite Connection Status</h1>
-        <p className={`text-lg font-semibold ${status.includes('failed') ? 'text-red-500' : 'text-green-500'}`}>
-          {status}
-        </p>
-      </div>
-    </div>
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/posts/:slug" element={<PostPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 }
 
