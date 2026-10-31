@@ -66,6 +66,25 @@ function PostPage() {
     <article>
       <h1>{post.title}</h1>
 
+      {post.publishedAt && (
+        <p>
+          Published on{" "}
+          {new Date(post.publishedAt).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </p>
+      )}
+
+      {post.tags.length > 0 && (
+        <div>
+          {post.tags.map((tag) => (
+            <span key={tag}>{tag}</span>
+          ))}
+        </div>
+      )}
+
       {post.excerpt && <p>{post.excerpt}</p>}
 
       <div>
