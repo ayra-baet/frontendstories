@@ -89,7 +89,7 @@
 
 .prose pre {
     background-color: #f4f0f5;
-    color: #53385b;
+    color: var(--foreground);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 1.25rem;
